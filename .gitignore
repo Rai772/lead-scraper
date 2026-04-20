@@ -1,0 +1,11 @@
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# 環境変数ファイル（パスワードなどが入るので絶対GitHubにあげない）
+.env
