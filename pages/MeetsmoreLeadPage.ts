@@ -49,10 +49,14 @@ export class MeetsmoreLeadPage {
 
     // 単一値取得
     const getByLabel = async (label: string) => {
-      const row = this.page.locator('tr').filter({
-        has: this.page.locator('td').filter({ hasText: new RegExp(`^${label}$`) })
-      }).first();
-      return (await row.locator('td').nth(1).locator('span').first().textContent({ timeout: 5000 }) ?? '').trim();
+      try {
+        const row = this.page.locator('tr').filter({
+          has: this.page.locator('td').filter({ hasText: new RegExp(`^${label}$`) })
+        }).first();
+        return (await row.locator('td').nth(1).locator('span').first().textContent({ timeout: 3000 }) ?? '').trim();
+      } catch {
+        return '';
+      }
     };
 
     // チェックマークがついた値のみ取得
