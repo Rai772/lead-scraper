@@ -40,13 +40,14 @@ export class MeetsmoreLeadPage {
   async openLatestLead() {
     await this.page.locator('a').filter({ hasText: /有効/ }).first().click();
     await this.page.waitForLoadState('domcontentloaded');
+    await this.page.waitForTimeout(2000);
     console.log('📄 詳細URL:', this.page.url());
   }
 
   // リード情報を取得する
   async getLeadInfo(): Promise<MeetsmoreLeadInfo> {
 
-    // 単一値取得（ラベルの隣のtdのspan）
+    // 単一値取得
     const getByLabel = async (label: string) => {
       const row = this.page.locator('tr').filter({
         has: this.page.locator('td').filter({ hasText: new RegExp(`^${label}$`) })
@@ -54,14 +55,6 @@ export class MeetsmoreLeadPage {
       return (await row.locator('td').nth(1).locator('span').first().textContent({ timeout: 3000 }) ?? '').trim();
     };
 
-    async openLatestLead() {
-      await this.page.locator('a').filter({ hasText: /有効/ }).first().click();
-      await this.page.waitForLoadState('domcontentloaded');
-      // headlessモード対応で少し待機
-      await this.page.waitForTimeout(2000);
-      console.log('📄 詳細URL:', this.page.url());
-    }
-    
     // チェックマークがついた値のみ取得
     const getCheckedValues = async (label: string) => {
       const row = this.page.locator('tr').filter({
@@ -69,8 +62,12 @@ export class MeetsmoreLeadPage {
       }).first();
       const valueTd     = row.locator('td').nth(1);
       const checkedDivs = valueTd.locator('div:has([data-testid="CheckIcon"])');
-      const texts       = await checkedDivs.locator('span').allTextContents();
-      return texts.map(t => t.trim()).filter(t => t).join('、');
+      try {
+        const texts = await checkedDivs.locator('span').allTextContents();
+        return texts.map(t => t.trim()).filter(t => t).join('、');
+      } catch {
+        return '';
+      }
     };
 
     // 氏名を取得して苗字と名前に分割
@@ -101,10 +98,6 @@ export class MeetsmoreLeadPage {
     const businessForm  = await getCheckedValues('事業形態');
     const industry      = await getCheckedValues('業種');
 
-    // Description
-    const description = '';
-
-    // Remarks
     const remarks = [
       `【事業形態】${businessForm}`,
       `【業務の種類】${businessType}`,
@@ -129,7 +122,7 @@ export class MeetsmoreLeadPage {
       LeadSource:          'ミツモア',
       product__c:          'Comdesk Lead',
       InstallationTime__c: await getCheckedValues('利用開始予定時期'),
-      Description:         description,
+      Description:         '',
       Remarks__c:          remarks,
       Field8__c:           parseInt(userCountRaw) || 0,
       LeadSourceTime__c:   leadSourceTime,
