@@ -96,7 +96,21 @@ export class MeetsmoreLeadPage {
     const leadSourceDate = cleanDate.substring(0, 10).replace(/\//g, '-');
 
     // 各項目を取得
-    const userCountRaw  = await getByLabel('想定利用人数') || await getByLabel('オペレーターの人数');
+    let userCountRaw = '';
+    let userCountLabel = '想定利用人数';
+
+      const count1 = await getByLabel('想定利用人数');
+      const count2 = await getByLabel('オペレーターの人数');
+
+    if (count1) {
+        userCountRaw   = count1;
+        userCountLabel = '想定利用人数';
+    } else if (count2) {
+        userCountRaw   = count2;
+        userCountLabel = 'オペレーターの人数';
+    }
+
+    // 各項目を取得
     const businessType  = await getCheckedValues('業務の種類');
     const otherServices = await getCheckedValues('導入検討サービス（CTIシステム以外）');
     const businessForm  = await getCheckedValues('事業形態');
@@ -105,7 +119,7 @@ export class MeetsmoreLeadPage {
     const remarks = [
       `【事業形態】${businessForm}`,
       `【業務の種類】${businessType}`,
-      `【想定利用人数】${userCountRaw}`,
+      `【${userCountLabel}】${userCountRaw}`,
       `【導入検討サービス】${otherServices}`,
     ].join('\n');
 
