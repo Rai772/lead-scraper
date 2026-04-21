@@ -51,9 +51,17 @@ export class MeetsmoreLeadPage {
       const row = this.page.locator('tr').filter({
         has: this.page.locator('td').filter({ hasText: new RegExp(`^${label}$`) })
       }).first();
-      return (await row.locator('td').nth(1).locator('span').first().textContent() ?? '').trim();
+      return (await row.locator('td').nth(1).locator('span').first().textContent({ timeout: 3000 }) ?? '').trim();
     };
 
+    async openLatestLead() {
+      await this.page.locator('a').filter({ hasText: /有効/ }).first().click();
+      await this.page.waitForLoadState('domcontentloaded');
+      // headlessモード対応で少し待機
+      await this.page.waitForTimeout(2000);
+      console.log('📄 詳細URL:', this.page.url());
+    }
+    
     // チェックマークがついた値のみ取得
     const getCheckedValues = async (label: string) => {
       const row = this.page.locator('tr').filter({
