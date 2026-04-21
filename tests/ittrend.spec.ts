@@ -17,16 +17,23 @@ test('ITトレンド リードスクレイプ → SF登録', async ({ browser })
     });
   } catch {
     await sendSlackNotification(
-      '🔴 ITトレンドの自動ログインが切れました。\n以下のコマンドで再登録してください。\n`npx playwright test tests/save-session.ts --headed --project=chromium`'
+      '🔴 ITトレンドの自動ログインが切れました。\n以下のコマンドで再登録してください。\n`npx playwright test tests/save-session.spec.ts --headed --project=chromium`'
     );
-    throw new Error('session.jsonが見つかりません');
+    // リトライしない
+    process.exit(0);
   }
 
   const page = await context.newPage();
 
   // ① セッションでログイン確認
   const loginPage = new IttrendLoginPage(page);
-  await loginPage.loginWithSession(context);
+  try {
+    await loginPage.loginWithSession(context);
+  } catch {
+    await context.close();
+    // リトライしない
+    process.exit(0);
+  }
 
   // ② 資料請求一覧へ遷移して一番上のリードを開く
   const leadPage = new IttrendLeadPage(page);
