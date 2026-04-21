@@ -40,7 +40,7 @@ export class MeetsmoreLeadPage {
   async openLatestLead() {
     await this.page.locator('a').filter({ hasText: /有効/ }).first().click();
     await this.page.waitForLoadState('domcontentloaded');
-    await this.page.waitForTimeout(2000);
+    await this.page.waitForTimeout(5000);
     console.log('📄 詳細URL:', this.page.url());
   }
 
@@ -49,10 +49,14 @@ export class MeetsmoreLeadPage {
 
     // 単一値取得
     const getByLabel = async (label: string) => {
-      const row = this.page.locator('tr').filter({
-        has: this.page.locator('td').filter({ hasText: new RegExp(`^${label}$`) })
-      }).first();
-      return (await row.locator('td').nth(1).locator('span').first().textContent({ timeout: 3000 }) ?? '').trim();
+      try {
+        const row = this.page.locator('tr').filter({
+          has: this.page.locator('td').filter({ hasText: new RegExp(`^${label}$`) })
+        }).first();
+        return (await row.locator('td').nth(1).locator('span').first().textContent({ timeout: 5000 }) ?? '').trim();
+      } catch {
+        return '';
+      }
     };
 
     // チェックマークがついた値のみ取得
