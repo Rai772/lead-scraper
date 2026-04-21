@@ -25,6 +25,9 @@ jobs:
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps chromium
 
+    - name: Restore session.json
+      run: echo '${{ secrets.SESSION_JSON }}' > session.json
+
     - name: Run Scraper
       env:
         ITTREND_EMAIL:      ${{ secrets.ITTREND_EMAIL }}
@@ -41,7 +44,7 @@ jobs:
         SLACK_WEBHOOK_URL:  ${{ secrets.SLACK_WEBHOOK_URL }}
       run: |
         if [ "${{ github.event.inputs.service }}" = "all" ]; then
-          npx playwright test tests/aspic.spec.ts tests/iimitsu.spec.ts tests/meetsmore.spec.ts --project=chromium
+          npx playwright test tests/aspic.spec.ts tests/iimitsu.spec.ts tests/meetsmore.spec.ts tests/ittrend.spec.ts --project=chromium
         else
           npx playwright test tests/${{ github.event.inputs.service }}.spec.ts --project=chromium
         fi

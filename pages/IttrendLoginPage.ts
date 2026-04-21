@@ -19,7 +19,7 @@ export class IttrendLoginPage {
     if (this.page.url().includes('/login')) {
       console.log('⚠️ セッション切れ！Slackに通知します...');
       await sendSlackNotification(
-        '🔴 ITトレンドのセッションが切れました。\n以下のコマンドを実行して再ログインしてください。\n`npx playwright test tests/save-session.ts --headed --project=chromium`'
+        '🚨 ITトレンドのセッションが切れました。'
       );
       throw new Error('セッション切れ：再ログインが必要です');
     }

@@ -7,7 +7,7 @@
 ```
 各比較媒体からメール受信
   → Google Apps Script（メール検知・トリガー）
-  → GCP Cloud Run Jobs（Playwrightを実行）
+  → GitHub Actions（Playwrightを実行）
   → Playwright（自動ログイン・スクレイピング）
   → Salesforce REST API（リード登録）
   → Slack通知（既存設定で自動送信、セッション切れ時など）
@@ -187,3 +187,4 @@ npx playwright test tests/save-session.spec.ts --headed --project=chromium
 | iimitsu | アイミツSaaSのみ実行 |
 | ittrend | ITトレンドのみ実行 |
 | meetsmore | ミツモアのみ実行 |
+
