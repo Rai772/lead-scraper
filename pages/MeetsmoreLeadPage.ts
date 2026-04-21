@@ -49,14 +49,10 @@ export class MeetsmoreLeadPage {
 
     // 単一値取得
     const getByLabel = async (label: string) => {
-      try {
-        const row = this.page.locator('tr').filter({
-          has: this.page.locator('td').filter({ hasText: new RegExp(`^${label}$`) })
-        }).first();
-        return (await row.locator('td').nth(1).locator('span').first().textContent({ timeout: 5000 }) ?? '').trim();
-      } catch {
-        return '';
-      }
+      const row = this.page.locator('tr').filter({
+        has: this.page.locator('td').filter({ hasText: new RegExp(`^${label}$`) })
+      }).first();
+      return (await row.locator('td').nth(1).locator('span').first().textContent({ timeout: 5000 }) ?? '').trim();
     };
 
     // チェックマークがついた値のみ取得
@@ -96,7 +92,7 @@ export class MeetsmoreLeadPage {
     const leadSourceDate = cleanDate.substring(0, 10).replace(/\//g, '-');
 
     // 各項目を取得
-    const userCountRaw  = await getByLabel('想定利用人数');
+    const userCountRaw  = await getByLabel('想定利用人数') || await getByLabel('オペレーターの人数');
     const businessType  = await getCheckedValues('業務の種類');
     const otherServices = await getCheckedValues('導入検討サービス（CTIシステム以外）');
     const businessForm  = await getCheckedValues('事業形態');
