@@ -6,11 +6,11 @@
 
 ```
 各比較媒体からメール受信
-  → Google Apps Script（メール検知・トリガー）
-  → GitHub Actions（Playwrightを実行）
-  → Playwright（自動ログイン・スクレイピング）
-  → Salesforce REST API（リード登録）
-  → Slack通知（既存設定で自動送信、セッション切れ時など）
+→ Google Apps Script（メール検知・トリガー）
+→ GitHub Actions（Playwrightを実行）
+→ Playwright（自動ログイン・スクレイピング）
+→ Salesforce REST API（リード登録）
+→ Slack通知（セッション切れ時など）
 ```
 
 ## ディレクトリ構成
@@ -31,7 +31,10 @@ lead-scraper/
 │   ├── iimitsu.spec.ts         ✅ 完成
 │   ├── ittrend.spec.ts         ✅ 完成（セッション方式）
 │   ├── meetsmore.spec.ts       ✅ 完成
-│   └── save-session.ts    ✅ ITトレンドセッション保存用
+│   └── save-session.spec.ts    ✅ ITトレンドセッション保存・GitHub Secrets自動更新
+├── .github/
+│   └── workflows/
+│       └── playwright.yml      ✅ GitHub Actions設定
 ├── salesforce.ts               ✅ SF API関数群
 ├── slack.ts                    ✅ Slack通知
 ├── session.json                ✅ ITトレンドセッション（Gitに含めない）
@@ -62,8 +65,26 @@ SF_CLIENT_ID=
 SF_CLIENT_SECRET=
 SF_INSTANCE_URL=https://widsley.my.salesforce.com
 SLACK_WEBHOOK_URL=
+GITHUB_PAT=
 
 ```
+### 3. GitHub Secrets 設定
+
+以下の項目を GitHub の `Settings → Secrets and variables → Actions` に登録してください。
+ITTREND_EMAIL
+ITTREND_PASSWORD
+IIMITSU_EMAIL
+IIMITSU_PASSWORD
+ASPIC_EMAIL
+ASPIC_PASSWORD
+MEETSMORE_EMAIL
+MEETSMORE_PASSWORD
+SF_CLIENT_ID
+SF_CLIENT_SECRET
+SF_INSTANCE_URL
+SLACK_WEBHOOK_URL
+SESSION_JSON
+
 ## コマンド一覧
 
 ```bash
@@ -76,9 +97,52 @@ npx playwright test tests/iimitsu.spec.ts --headed --project=chromium
 npx playwright test tests/ittrend.spec.ts --headed --project=chromium
 npx playwright test tests/meetsmore.spec.ts --headed --project=chromium
 
-# ITトレンドセッション保存（reCAPTCHA対応）
+# ITトレンドセッション保存・GitHub Secrets自動更新
+npx playwright test tests/save-session.spec.ts --headed --project=chromium
+
+# 過去データ一括インポート
+npx playwright test tests/import-aspic.spec.ts --project=chromium
+npx playwright test tests/import-iimitsu.spec.ts --project=chromium
+npx playwright test tests/import-ittrend.spec.ts --project=chromium
+npx playwright test tests/import-meetsmore.spec.ts --project=chromium
+```
+
+## ITトレンド reCAPTCHA対応
+
+ITトレンドはreCAPTCHAが表示されるため、Cookieセッション方式を採用しています。
+
+### セッション切れ時の対応手順
+
+1. Slackに通知が届く
+2. ローカルPCで以下を実行
+```bash
 npx playwright test tests/save-session.spec.ts --headed --project=chromium
 ```
+3. ブラウザが開いたらITトレンドに手動ログイン
+4. 「GitHub Secrets を自動更新しました！」と表示されたら完了
+
+## GitHub Actions
+
+`workflow_dispatch` で手動実行できます。メールが届くと Google Apps Script が自動で起動します。
+
+| service パラメータ | 実行内容 |
+|-------------------|---------|
+| all | 全サービスを実行 |
+| aspic | アスピックのみ実行 |
+| iimitsu | アイミツSaaSのみ実行 |
+| ittrend | ITトレンドのみ実行 |
+| meetsmore | ミツモアのみ実行 |
+
+## Google Apps Script
+
+5分おきにメールをチェックして、各サービスからメールが届いたらGitHub Actionsを自動起動します。
+
+| メール送信元 | 実行サービス |
+|------------|------------|
+| asu@asulead.cloud | アスピック |
+| support_seller@saas.imitsu.jp | アイミツSaaS |
+| no-reply@meetsmore.com | ミツモア |
+| cs@innovation.co.jp | ITトレンド |
 
 ## 各サービスのSFフィールドマッピング
 
@@ -156,35 +220,7 @@ npx playwright test tests/save-session.spec.ts --headed --project=chromium
 | 所属部署・部門 | 部署名 | Department__c |
 | 業種 | 主業種 | MainIndustry__c |
 | 利用開始予定時期 | 導入時期 | InstallationTime__c |
-| 想定利用人数 | 想定利用人数 | Field8__c |
+| 想定利用人数/オペレーターの人数 | 想定利用人数 | Field8__c |
 | 事業形態・業務種類・導入検討サービス | 備考 | Remarks__c |
 | 依頼日時 | 初回流入日時 | LeadSourceTime__c |
 | 依頼日 | 初回流入日 | LeadSourceDate__c |
-
-## ITトレンド reCAPTCHA対応
-
-ITトレンドはreCAPTCHAが表示されるため、Cookieセッション方式を採用しています。
-
-### セッション切れ時の対応手順
-1. Cursorを開く
-2. ターミナルで以下を実行
-```bash
-npx playwright test tests/save-session.spec.ts --headed --project=chromium
-```
-3. ブラウザが開いたらITトレンドに手動ログイン
-4. 「セッションを保存しました！」と表示されたら完了
-
-セッションが切れると自動でSlackに通知が届きます。
-
-## GitHub Actions
-
-`workflow_dispatch` で手動実行できます。
-
-| service パラメータ | 実行内容 |
-|-------------------|---------|
-| all | アスピック・アイミツ・ミツモアを実行 |
-| aspic | アスピックのみ実行 |
-| iimitsu | アイミツSaaSのみ実行 |
-| ittrend | ITトレンドのみ実行 |
-| meetsmore | ミツモアのみ実行 |
-
