@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       service:
-        description: '実行するサービス (all / aspic / iimitsu / ittrend / meetsmore)'
+        description: '実行するサービス (all / aspic / iimitsu / meetsmore)'
         required: true
         default: 'all'
 
@@ -25,13 +25,8 @@ jobs:
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps chromium
 
-    - name: Restore session.json
-      run: echo '${{ secrets.SESSION_JSON }}' > session.json
-
     - name: Run Scraper
       env:
-        ITTREND_EMAIL:      ${{ secrets.ITTREND_EMAIL }}
-        ITTREND_PASSWORD:   ${{ secrets.ITTREND_PASSWORD }}
         IIMITSU_EMAIL:      ${{ secrets.IIMITSU_EMAIL }}
         IIMITSU_PASSWORD:   ${{ secrets.IIMITSU_PASSWORD }}
         ASPIC_EMAIL:        ${{ secrets.ASPIC_EMAIL }}
@@ -41,10 +36,9 @@ jobs:
         SF_CLIENT_ID:       ${{ secrets.SF_CLIENT_ID }}
         SF_CLIENT_SECRET:   ${{ secrets.SF_CLIENT_SECRET }}
         SF_INSTANCE_URL:    ${{ secrets.SF_INSTANCE_URL }}
-        SLACK_WEBHOOK_URL:  ${{ secrets.SLACK_WEBHOOK_URL }}
       run: |
         if [ "${{ github.event.inputs.service }}" = "all" ]; then
-          npx playwright test tests/aspic.spec.ts tests/iimitsu.spec.ts tests/meetsmore.spec.ts tests/ittrend.spec.ts --project=chromium
+          npx playwright test tests/aspic.spec.ts tests/iimitsu.spec.ts tests/meetsmore.spec.ts --project=chromium
         else
           npx playwright test tests/${{ github.event.inputs.service }}.spec.ts --project=chromium
         fi

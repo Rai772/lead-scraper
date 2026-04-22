@@ -1,6 +1,6 @@
 # lead-scraper
 
-比較媒体（ITトレンド / アスピック / ミツモア / アイミツSaaS）のリードを自動取得してSalesforceに登録するRPAツール。
+比較媒体（アスピック / ミツモア / アイミツSaaS）のリードを自動取得してSalesforceに登録するRPAツール。
 
 ## アーキテクチャ
 
@@ -22,22 +22,17 @@ lead-scraper/
 │   ├── AspicLoginPage.ts       ✅ 完成
 │   ├── IimitsuLeadPage.ts      ✅ 完成
 │   ├── IimitsuLoginPage.ts     ✅ 完成
-│   ├── IttrendLeadPage.ts      ✅ 完成
-│   ├── IttrendLoginPage.ts     ✅ 完成
 │   ├── MeetsmoreLeadPage.ts    ✅ 完成
 │   └── MeetsmoreLoginPage.ts   ✅ 完成
 ├── tests/
 │   ├── aspic.spec.ts           ✅ 完成
 │   ├── iimitsu.spec.ts         ✅ 完成
-│   ├── ittrend.spec.ts         ✅ 完成（セッション方式）
-│   ├── meetsmore.spec.ts       ✅ 完成
-│   └── save-session.spec.ts    ✅ ITトレンドセッション保存・GitHub Secrets自動更新
+│   └── meetsmore.spec.ts       ✅ 完成
 ├── .github/
 │   └── workflows/
 │       └── playwright.yml      ✅ GitHub Actions設定
 ├── salesforce.ts               ✅ SF API関数群
 ├── slack.ts                    ✅ Slack通知
-├── session.json                ✅ ITトレンドセッション（Gitに含めない）
 ├── .env                        ✅ 設定済み（Gitに含めない）
 ├── .gitignore                  ✅ 設定済み
 └── playwright.config.ts        ✅ 設定済み
@@ -53,8 +48,7 @@ npx playwright install chromium
 ```
 
 ### 2. .env 設定
-ITTREND_EMAIL=
-ITTREND_PASSWORD=
+```
 IIMITSU_EMAIL=
 IIMITSU_PASSWORD=
 ASPIC_EMAIL=
@@ -66,13 +60,12 @@ SF_CLIENT_SECRET=
 SF_INSTANCE_URL=https://widsley.my.salesforce.com
 SLACK_WEBHOOK_URL=
 GITHUB_PAT=
-
 ```
+
 ### 3. GitHub Secrets 設定
 
 以下の項目を GitHub の `Settings → Secrets and variables → Actions` に登録してください。
-ITTREND_EMAIL
-ITTREND_PASSWORD
+```
 IIMITSU_EMAIL
 IIMITSU_PASSWORD
 ASPIC_EMAIL
@@ -83,7 +76,7 @@ SF_CLIENT_ID
 SF_CLIENT_SECRET
 SF_INSTANCE_URL
 SLACK_WEBHOOK_URL
-SESSION_JSON
+```
 
 ## コマンド一覧
 
@@ -94,32 +87,13 @@ npx playwright test --project=chromium
 # 個別実行
 npx playwright test tests/aspic.spec.ts --headed --project=chromium
 npx playwright test tests/iimitsu.spec.ts --headed --project=chromium
-npx playwright test tests/ittrend.spec.ts --headed --project=chromium
 npx playwright test tests/meetsmore.spec.ts --headed --project=chromium
-
-# ITトレンドセッション保存・GitHub Secrets自動更新
-npx playwright test tests/save-session.spec.ts --headed --project=chromium
 
 # 過去データ一括インポート
 npx playwright test tests/import-aspic.spec.ts --project=chromium
 npx playwright test tests/import-iimitsu.spec.ts --project=chromium
-npx playwright test tests/import-ittrend.spec.ts --project=chromium
 npx playwright test tests/import-meetsmore.spec.ts --project=chromium
 ```
-
-## ITトレンド reCAPTCHA対応
-
-ITトレンドはreCAPTCHAが表示されるため、Cookieセッション方式を採用しています。
-
-### セッション切れ時の対応手順
-
-1. Slackに通知が届く
-2. ローカルPCで以下を実行
-```bash
-npx playwright test tests/save-session.spec.ts --headed --project=chromium
-```
-3. ブラウザが開いたらITトレンドに手動ログイン
-4. 「GitHub Secrets を自動更新しました！」と表示されたら完了
 
 ## GitHub Actions
 
@@ -130,7 +104,6 @@ npx playwright test tests/save-session.spec.ts --headed --project=chromium
 | all | 全サービスを実行 |
 | aspic | アスピックのみ実行 |
 | iimitsu | アイミツSaaSのみ実行 |
-| ittrend | ITトレンドのみ実行 |
 | meetsmore | ミツモアのみ実行 |
 
 ## Google Apps Script
@@ -142,31 +115,8 @@ npx playwright test tests/save-session.spec.ts --headed --project=chromium
 | asu@asulead.cloud | アスピック |
 | support_seller@saas.imitsu.jp | アイミツSaaS |
 | no-reply@meetsmore.com | ミツモア |
-| cs@innovation.co.jp | ITトレンド |
 
 ## 各サービスのSFフィールドマッピング
-
-### ITトレンド
-| ITトレンド項目 | SFフィールド | API参照名 |
-|----------------|-------------|-----------|
-| 注文番号 | インテグレーションID | integration_ID__c |
-| 氏名 | 姓・名 | LastName / FirstName |
-| 企業名 | 会社名 | Company |
-| 電話番号 | 会社電話 | Phone |
-| メール | メール | Email |
-| 住所 | 住所 | State / Street |
-| 従業員規模 | 従業員規模 | Employee_size__c |
-| 業種 | 主業種 | MainIndustry__c |
-| 部署名 | 部署名 | Department__c |
-| 役職 | 役職 | title__c |
-| 導入予定時期 | 導入時期 | InstallationTime__c |
-| 導入状況 | システム使用しているか | Field5__c |
-| 資料請求日時 | 初回流入日時 | LeadSourceTime__c |
-| 資料請求日 | 初回流入日 | LeadSourceDate__c |
-| お問い合わせ内容 | web問い合わせ内容 | web__c |
-| 請求単価 | 備考 | Remarks__c |
-| - | 商材（固定） | product__c |
-| - | 初回流入経路（固定） | first_touchpoint__c |
 
 ### アイミツSaaS
 | アイミツ項目 | SFフィールド | API参照名 |
