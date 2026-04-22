@@ -10,7 +10,6 @@
 → GitHub Actions（Playwrightを実行）
 → Playwright（自動ログイン・スクレイピング）
 → Salesforce REST API（リード登録）
-→ Slack通知（セッション切れ時など）
 ```
 
 ## ディレクトリ構成
