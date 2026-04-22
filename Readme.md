@@ -10,7 +10,7 @@
 → GitHub Actions（Playwrightを実行）
 → Playwright（自動ログイン・スクレイピング）
 → Salesforce REST API（リード登録）
-→ Slack通知（セッション切れ時など）
+→ Slack通知（エラー発生時）
 ```
 
 ## ディレクトリ構成
@@ -116,6 +116,20 @@ npx playwright test tests/import-meetsmore.spec.ts --project=chromium
 | support_seller@saas.imitsu.jp | アイミツSaaS |
 | no-reply@meetsmore.com | ミツモア |
 
+## Slackエラー通知
+
+自動登録に失敗した場合、Slackに通知が届きます。
+
+| エラー種別 | 発生タイミング |
+|-----------|--------------|
+| ログイン失敗 | ログイン処理で例外発生時 |
+| スクレイピング失敗 | リード一覧取得・遷移で例外発生時 |
+| リード情報取得失敗 | データ取得で例外発生時 |
+| SF認証失敗 | Salesforceトークン取得失敗時 |
+| SF登録失敗 | リード登録失敗時（ID付き） |
+
+通知にはエラー種別・詳細・発生日時が含まれます。
+
 ## 各サービスのSFフィールドマッピング
 
 ### アイミツSaaS
@@ -152,7 +166,7 @@ npx playwright test tests/import-meetsmore.spec.ts --project=chromium
 | 部署名 | 部署名 | Department__c |
 | 備考 | web問い合わせ内容 | web__c |
 | 導入時期 | 導入時期 | InstallationTime__c |
-| DL区分 | 備考 | Remarks__c |
+| DL区分 | 説明 | Description |
 | 日時 | 初回流入日時 | LeadSourceTime__c |
 | 日付 | 初回流入日 | LeadSourceDate__c |
 
@@ -171,6 +185,13 @@ npx playwright test tests/import-meetsmore.spec.ts --project=chromium
 | 業種 | 主業種 | MainIndustry__c |
 | 利用開始予定時期 | 導入時期 | InstallationTime__c |
 | 想定利用人数/オペレーターの人数 | 想定利用人数 | Field8__c |
-| 事業形態・業務種類・導入検討サービス | 備考 | Remarks__c |
+| 事業形態・業務種類・導入検討サービス | 説明 | Description |
 | 依頼日時 | 初回流入日時 | LeadSourceTime__c |
 | 依頼日 | 初回流入日 | LeadSourceDate__c |
+
+### 重複リード時の更新（全サービス共通）
+メールアドレスで既存リードが見つかった場合、新規登録は行わず既存リードの備考を更新します。
+
+| 更新フィールド | 内容 | API参照名 |
+|--------------|------|-----------|
+| 備考 | 〇〇より再問い合わせあり（日付） | Remarks__c |

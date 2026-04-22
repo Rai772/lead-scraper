@@ -2,7 +2,8 @@ import { test } from '@playwright/test';
 import * as dotenv from 'dotenv';
 import { IimitsuLoginPage } from '../pages/IimitsuLoginPage';
 import { IimitsuLeadPage } from '../pages/IimitsuLeadPage';
-import { getSalesforceToken, createSFLead, findLeadByIntegrationId } from '../salesforce';
+import { getSalesforceToken, createSFLead, findLeadByIntegrationId, findLeadIdByEmail, updateSFLead } from '../salesforce';
+import { notifySlackError } from '../slack';
 
 dotenv.config();
 
@@ -14,15 +15,31 @@ test('アイミツ リードスクレイプ → SF登録', async ({ page }) => {
   // ① 自動ログイン
   const loginPage = new IimitsuLoginPage(page);
   await loginPage.goto();
-  await loginPage.login(email, password);
+  try {
+    await loginPage.login(email, password);
+  } catch (e: any) {
+    await notifySlackError('アイミツ', 'ログイン失敗', e.message);
+    throw e;
+  }
 
   // ② リード一覧へ遷移して一番上のリードを開く
   const leadPage = new IimitsuLeadPage(page);
-  await leadPage.gotoList();
-  await leadPage.openLatestLead();
+  try {
+    await leadPage.gotoList();
+    await leadPage.openLatestLead();
+  } catch (e: any) {
+    await notifySlackError('アイミツ', 'スクレイピング失敗', e.message);
+    throw e;
+  }
 
   // ③ リード情報を取得
-  const leadInfo = await leadPage.getLeadInfo();
+  let leadInfo: any;
+  try {
+    leadInfo = await leadPage.getLeadInfo();
+  } catch (e: any) {
+    await notifySlackError('アイミツ', 'リード情報取得失敗', e.message);
+    throw e;
+  }
 
   // ④ 役職の変換マップ
   const jobTitleMap: Record<string, string> = {
@@ -72,16 +89,43 @@ test('アイミツ リードスクレイプ → SF登録', async ({ page }) => {
   };
 
   // ⑤ SF認証
-  const token = await getSalesforceToken();
+  let token: string;
+  try {
+    token = await getSalesforceToken();
+  } catch (e: any) {
+    await notifySlackError('アイミツ', 'SF認証失敗', e.message);
+    throw e;
+  }
 
-  // ⑥ 重複チェック
+  // ⑥ 重複チェック（リードID）
   const exists = await findLeadByIntegrationId(token, sfLead.integration_ID__c);
   if (exists) {
     console.log('⏭️ スキップ（登録済み）: リードID', sfLead.integration_ID__c);
     return;
   }
 
-  // ⑦ SF登録
-  const result = await createSFLead(token, sfLead);
-  console.log('🎉 登録完了！SF ID:', result.id);
+  // ⑦ メールアドレスで既存リード検索
+  const existingLeadId = await findLeadIdByEmail(token, sfLead.Email);
+  if (existingLeadId) {
+    const today = new Date().toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo' });
+    try {
+      await updateSFLead(token, existingLeadId, {
+        Remarks__c: `アイミツより再問い合わせあり（${today}）`,
+      });
+      console.log('🔄 既存リード備考更新（メール重複）: SF ID:', existingLeadId);
+    } catch (e: any) {
+      await notifySlackError('アイミツ', 'SF備考更新失敗', `SF ID:${existingLeadId}\n${e.message}`);
+      throw e;
+    }
+    return;
+  }
+
+  // ⑧ SF登録
+  try {
+    const result = await createSFLead(token, sfLead);
+    console.log('🎉 登録完了！SF ID:', result.id);
+  } catch (e: any) {
+    await notifySlackError('アイミツ', 'SF登録失敗', `リードID:${sfLead.integration_ID__c}\n${e.message}`);
+    throw e;
+  }
 });
