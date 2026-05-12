@@ -108,7 +108,7 @@ npx playwright test tests/import-meetsmore.spec.ts --project=chromium
 
 ## Google Apps Script
 
-5分おきにメールをチェックして、各サービスからメールが届いたらGitHub Actionsを自動起動します。
+1分おきにメールをチェックして、各サービスからメールが届いたらGitHub Actionsを自動起動します。
 
 | メール送信元 | 実行サービス |
 |------------|------------|

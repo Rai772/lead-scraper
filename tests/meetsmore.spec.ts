@@ -157,7 +157,10 @@ test('ミツモア リードスクレイプ → SF登録', async ({ page }) => {
 
   // ⑩ SF登録
   try {
-    const result = await createSFLead(token, sfLead);
+    const result = await createSFLead(token, {
+      ...sfLead,
+      User__c: process.env.SF_ADMIN_USER_ID,
+    });
     console.log('🎉 登録完了！SF ID:', result.id);
   } catch (e: any) {
     await notifySlackError('ミツモア', 'SF登録失敗', `依頼ID:${sfLead.integration_ID__c}\n${e.message}`);
