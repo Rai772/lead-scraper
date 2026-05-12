@@ -58,6 +58,7 @@ MEETSMORE_PASSWORD=
 SF_CLIENT_ID=
 SF_CLIENT_SECRET=
 SF_INSTANCE_URL=https://widsley.my.salesforce.com
+SF_ADMIN_USER_ID=
 SLACK_WEBHOOK_URL=
 GITHUB_PAT=
 ```
@@ -75,6 +76,7 @@ MEETSMORE_PASSWORD
 SF_CLIENT_ID
 SF_CLIENT_SECRET
 SF_INSTANCE_URL
+SF_ADMIN_USER_ID
 SLACK_WEBHOOK_URL
 ```
 
@@ -152,6 +154,7 @@ npx playwright test tests/import-meetsmore.spec.ts --project=chromium
 | ヒアリング内容 | 説明 | Description |
 | 取次日時 | 初回流入日時 | LeadSourceTime__c |
 | 取次日 | 初回流入日 | LeadSourceDate__c |
+| （固定：管理者） | 担当ユーザー | User__c |
 
 ### アスピック
 | アスピック項目 | SFフィールド | API参照名 |
@@ -169,6 +172,7 @@ npx playwright test tests/import-meetsmore.spec.ts --project=chromium
 | DL区分 | 説明 | Description |
 | 日時 | 初回流入日時 | LeadSourceTime__c |
 | 日付 | 初回流入日 | LeadSourceDate__c |
+| （固定：管理者） | 担当ユーザー | User__c |
 
 ### ミツモア
 | ミツモア項目 | SFフィールド | API参照名 |
@@ -188,6 +192,7 @@ npx playwright test tests/import-meetsmore.spec.ts --project=chromium
 | 事業形態・業務種類・導入検討サービス | 説明 | Description |
 | 依頼日時 | 初回流入日時 | LeadSourceTime__c |
 | 依頼日 | 初回流入日 | LeadSourceDate__c |
+| （固定：管理者） | 担当ユーザー | User__c |
 
 ### 重複リード時の更新（全サービス共通）
 メールアドレスで既存リードが見つかった場合、新規登録は行わず既存リードの備考を更新します。
