@@ -159,7 +159,7 @@ test('ミツモア リードスクレイプ → SF登録', async ({ page }) => {
   try {
     const result = await createSFLead(token, {
       ...sfLead,
-      User__c: process.env.SF_ADMIN_USER_ID,
+      OwnerId: process.env.SF_ADMIN_USER_ID,
     });
     console.log('🎉 登録完了！SF ID:', result.id);
   } catch (e: any) {
