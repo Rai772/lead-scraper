@@ -36,7 +36,7 @@ jobs:
         SF_CLIENT_ID:       ${{ secrets.SF_CLIENT_ID }}
         SF_CLIENT_SECRET:   ${{ secrets.SF_CLIENT_SECRET }}
         SF_INSTANCE_URL:    ${{ secrets.SF_INSTANCE_URL }}
-SF_ADMIN_USER_ID:      ${{ secrets.SF_ADMIN_USER_ID }}
+        SF_ADMIN_USER_ID:      ${{ secrets.SF_ADMIN_USER_ID }}
         SLACK_WEBHOOK_URL:     ${{ secrets.SLACK_WEBHOOK_URL }}
       run: |
         if [ "${{ github.event.inputs.service }}" = "all" ]; then
