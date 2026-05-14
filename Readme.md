@@ -58,8 +58,7 @@ MEETSMORE_PASSWORD=
 SF_CLIENT_ID=
 SF_CLIENT_SECRET=
 SF_INSTANCE_URL=https://widsley.my.salesforce.com
-SF_ADMIN_USER_ID=         # Widsley AdminのSFユーザーID
-SLACK_WEBHOOK_URL=        # エラー通知用Slack Webhook URL
+SLACK_WEBHOOK_URL=
 GITHUB_PAT=
 ```
 
@@ -76,7 +75,6 @@ MEETSMORE_PASSWORD
 SF_CLIENT_ID
 SF_CLIENT_SECRET
 SF_INSTANCE_URL
-SF_ADMIN_USER_ID
 SLACK_WEBHOOK_URL
 ```
 
@@ -131,29 +129,6 @@ npx playwright test tests/import-meetsmore.spec.ts --project=chromium
 | SF登録失敗 | リード登録失敗時（ID付き） |
 
 通知にはエラー種別・詳細・発生日時が含まれます。
-
-## SF登録仕様
-
-### セールス担当の自動セット
-新規リード登録時、セールス担当（`User__c`）に自動で Widsley Admin をセットします。
-Widsley Admin の SF ユーザーID を `.env` と GitHub Secrets の `SF_ADMIN_USER_ID` に設定してください。
-
-### 日付のタイムゾーン対応
-各媒体から取得する依頼日時はUTCで返されるため、JST（+9時間）に変換してSFに登録します。
-
-### 従業員規模の変換
-各媒体から取得した従業員規模を以下のSFの選択肢に変換して登録します。
-
-| 変換後の値 |
-|-----------|
-| 1～10 |
-| 11～49 |
-| 50～99 |
-| 100～299 |
-| 300～499 |
-| 500～999 |
-| 1000～4999 |
-| 5000～ |
 
 ## 各サービスのSFフィールドマッピング
 
@@ -215,8 +190,26 @@ Widsley Admin の SF ユーザーID を `.env` と GitHub Secrets の `SF_ADMIN_
 | 依頼日 | 初回流入日 | LeadSourceDate__c |
 
 ### 重複リード時の更新（全サービス共通）
-メールアドレスで既存リードが見つかった場合、新規登録は行わず既存リードの備考を更新します。
+メールアドレスで既存リードが見つかった場合、新規登録は行わず既存リードの備考に追記します。
 
 | 更新フィールド | 内容 | API参照名 |
 |--------------|------|-----------|
-| 備考 | 〇〇より再問い合わせあり（日付） | Remarks__c |
+| 備考 | 下記フォーマットで追記（既存の備考は上書きしない） | Remarks__c |
+
+追記フォーマット：
+
+```
+【〇〇より再問い合わせあり】
+日付：YYYY/M/D
+氏名：姓 名
+会社名：〇〇株式会社
+電話番号：0X0-XXXX-XXXX
+従業員規模：〇〇〜〇〇
+WEB問い合わせ：〇〇〇〇
+説明：〇〇〇〇
+備考：〇〇〇〇
+```
+
+- 〇〇 は流入元媒体名（アスピック / アイミツSaaS / ミツモア / ホームページ）
+- 値が空のフィールドは出力しない
+- 複数回の再問い合わせは空行区切りで追記
