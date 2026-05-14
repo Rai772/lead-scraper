@@ -2,7 +2,7 @@ import { test } from '@playwright/test';
 import * as dotenv from 'dotenv';
 import { MeetsmoreLoginPage } from '../pages/MeetsmoreLoginPage';
 import { MeetsmoreLeadPage } from '../pages/MeetsmoreLeadPage';
-import { getSalesforceToken, createSFLead, findLeadByIntegrationId, findLeadIdByEmail, updateSFLead } from '../salesforce';
+import { getSalesforceToken, createSFLead, findLeadByIntegrationId, findLeadIdByEmail, getExistingRemarks, buildRemarksText, updateSFLead } from '../salesforce';
 import { notifySlackError } from '../slack';
 
 dotenv.config();
@@ -130,14 +130,13 @@ test('ミツモア リードスクレイプ → SF登録', async ({ page }) => {
     return;
   }
 
-  // ⑨ メールアドレスで既存リード検索
+  // ⑨ メールアドレスで既存リード検索 → 備考追記して終了
   const existingLeadId = await findLeadIdByEmail(token, sfLead.Email);
   if (existingLeadId) {
-    const today = new Date().toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo' });
     try {
-      await updateSFLead(token, existingLeadId, {
-        Remarks__c: `ミツモアより再問い合わせあり（${today}）`,
-      });
+      const existingRemarks = await getExistingRemarks(token, existingLeadId);
+      const remarks = buildRemarksText('ミツモア', leadInfo, existingRemarks);
+      await updateSFLead(token, existingLeadId, { Remarks__c: remarks });
       console.log('🔄 既存リード備考更新（メール重複）: SF ID:', existingLeadId);
     } catch (e: any) {
       await notifySlackError('ミツモア', 'SF備考更新失敗', `SF ID:${existingLeadId}\n${e.message}`);

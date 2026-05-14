@@ -18,7 +18,7 @@ export async function getSalesforceToken(): Promise<string> {
     body:   params,
   });
 
-  const data = await res.json();
+  const data = await res.json() as any;
   if (!data.access_token) {
     throw new Error('SF認証失敗: ' + JSON.stringify(data));
   }
@@ -39,7 +39,7 @@ export async function createSFLead(token: string, lead: Record<string, any>): Pr
     body: JSON.stringify(lead),
   });
 
-  const data = await res.json();
+  const data = await res.json() as any;
 
   if (!res.ok) {
     throw new Error('SFリード登録失敗: ' + JSON.stringify(data));
@@ -71,7 +71,7 @@ export async function findLeadByEmailOrPhone(
       headers: { 'Authorization': `Bearer ${token}` },
     }
   );
-  const data = await res.json();
+  const data = await res.json() as any;
   if (!res.ok) {
     throw new Error('SF重複チェック失敗(email/phone): ' + JSON.stringify(data));
   }
@@ -91,7 +91,7 @@ export async function findLeadByIntegrationId(token: string, integrationId: stri
       headers: { 'Authorization': `Bearer ${token}` },
     }
   );
-  const data = await res.json();
+  const data = await res.json() as any;
   if (!res.ok) {
     throw new Error('SF重複チェック失敗(integrationId): ' + JSON.stringify(data));
   }
@@ -109,11 +109,11 @@ export async function findLeadIdByIntegrationId(token: string, integrationId: st
     `${process.env.SF_INSTANCE_URL}/services/data/v59.0/query?q=${query}`,
     { headers: { 'Authorization': `Bearer ${token}` } }
   );
-  const data = await res.json();
+  const data = await res.json() as any;
   return data.totalSize > 0 ? data.records[0].Id : null;
 }
 
-/// メールアドレスでリードIDを取得する
+// メールアドレスでリードIDを取得する
 export async function findLeadIdByEmail(token: string, email: string): Promise<string | null> {
   if (!email) return null;
 
@@ -124,8 +124,49 @@ export async function findLeadIdByEmail(token: string, email: string): Promise<s
     `${process.env.SF_INSTANCE_URL}/services/data/v59.0/query?q=${query}`,
     { headers: { 'Authorization': `Bearer ${token}` } }
   );
-  const data = await res.json();
+  const data = await res.json() as any;
   return data.totalSize > 0 ? data.records[0].Id : null;
+}
+
+// 既存リードの現在の Remarks__c を取得する
+export async function getExistingRemarks(token: string, leadId: string): Promise<string> {
+  const res = await fetch(
+    `${process.env.SF_INSTANCE_URL}/services/data/v59.0/sobjects/Lead/${leadId}?fields=Remarks__c`,
+    { headers: { 'Authorization': `Bearer ${token}` } }
+  );
+  const data = await res.json() as any;
+  if (!res.ok) {
+    throw new Error('SF備考取得失敗: ' + JSON.stringify(data));
+  }
+  return data.Remarks__c ?? '';
+}
+
+// 再問い合わせ時に既存リードの備考に追記するテキストを組み立てる
+export function buildRemarksText(
+  sourceName: string,
+  leadInfo: Record<string, any>,
+  existingRemarks: string
+): string {
+  const today = new Date().toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo' });
+
+  const lines: string[] = [];
+  lines.push(`【${sourceName}より再問い合わせあり】`);
+  lines.push(`日付：${today}`);
+  if (leadInfo.LastName || leadInfo.FirstName) {
+    lines.push(`氏名：${(leadInfo.LastName ?? '')} ${(leadInfo.FirstName ?? '')}`.trimEnd());
+  }
+  if (leadInfo.Company)          lines.push(`会社名：${leadInfo.Company}`);
+  if (leadInfo.Phone)            lines.push(`電話番号：${leadInfo.Phone}`);
+  if (leadInfo.Employee_size__c) lines.push(`従業員規模：${leadInfo.Employee_size__c}`);
+  if (leadInfo.web__c)           lines.push(`WEB問い合わせ：${leadInfo.web__c}`);
+  if (leadInfo.Description)      lines.push(`説明：${leadInfo.Description}`);
+  if (leadInfo.Remarks__c)       lines.push(`備考：${leadInfo.Remarks__c}`);
+
+  const newEntry = lines.join('\n');
+
+  return existingRemarks
+    ? `${existingRemarks}\n\n${newEntry}`
+    : newEntry;
 }
 
 // SFのリードを更新する
@@ -143,7 +184,7 @@ export async function updateSFLead(token: string, leadId: string, lead: Record<s
   );
 
   if (!res.ok) {
-    const data = await res.json();
+    const data = await res.json() as any;
     throw new Error('SFリード更新失敗: ' + JSON.stringify(data));
   }
 

@@ -2,7 +2,7 @@ import { test } from '@playwright/test';
 import * as dotenv from 'dotenv';
 import { AspicLoginPage } from '../pages/AspicLoginPage';
 import { AspicLeadPage } from '../pages/AspicLeadPage';
-import { getSalesforceToken, createSFLead, findLeadByIntegrationId, findLeadIdByEmail, updateSFLead } from '../salesforce';
+import { getSalesforceToken, createSFLead, findLeadByIntegrationId, findLeadIdByEmail, getExistingRemarks, buildRemarksText, updateSFLead } from '../salesforce';
 import { notifySlackError } from '../slack';
 
 dotenv.config();
@@ -57,7 +57,7 @@ test('アスピック リードスクレイプ → SF登録', async ({ page }) =
   const resolveEmployeeSize = (raw: string): string => {
     const matches = raw.match(/\d+/g);
     if (!matches) return '';
-    const num = parseInt(matches[matches.length - 1]); 
+    const num = parseInt(matches[matches.length - 1]);
     if (isNaN(num)) return '';
     if (num <= 10)   return '1\uFF5E10';
     if (num <= 49)   return '11\uFF5E49';
@@ -77,7 +77,7 @@ test('アスピック リードスクレイプ → SF登録', async ({ page }) =
     Email:               leadInfo.Email,
     State:               leadInfo.State,
     Street:              leadInfo.Street,
-    Employee_size__c: resolveEmployeeSize(leadInfo.Employee_size__c),
+    Employee_size__c:    resolveEmployeeSize(leadInfo.Employee_size__c),
     title__c:            jobTitleMap[leadInfo.title__c] ?? 'その他',
     Department__c:       leadInfo.Department__c,
     web__c:              leadInfo.web__c,
@@ -107,14 +107,13 @@ test('アスピック リードスクレイプ → SF登録', async ({ page }) =
     return;
   }
 
-  // ⑧ メールアドレスで既存リード検索
+  // ⑧ メールアドレスで既存リード検索 → 備考追記して終了
   const existingLeadId = await findLeadIdByEmail(token, sfLead.Email);
   if (existingLeadId) {
-    const today = new Date().toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo' });
     try {
-      await updateSFLead(token, existingLeadId, {
-        Remarks__c: `アスピックより再問い合わせあり（${today}）`,
-      });
+      const existingRemarks = await getExistingRemarks(token, existingLeadId);
+      const remarks = buildRemarksText('アスピック', leadInfo, existingRemarks);
+      await updateSFLead(token, existingLeadId, { Remarks__c: remarks });
       console.log('🔄 既存リード備考更新（メール重複）: SF ID:', existingLeadId);
     } catch (e: any) {
       await notifySlackError('アスピック', 'SF備考更新失敗', `SF ID:${existingLeadId}\n${e.message}`);
