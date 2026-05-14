@@ -66,12 +66,12 @@ export class AspicLeadPage {
 
     // 初回流入日時・日付を取得
     const rawDate = await this.page.locator('.atom_fnc_time_stamp').first().textContent() ?? '';
-    const leadSourceTime = rawDate.trim().replace(
-      /(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})/,
-      '$1-$2-$3T$4'
-    );
-    const leadSourceDate = rawDate.trim().substring(0, 10); 
-
+    const parsedDate = new Date(rawDate.trim().replace(
+      /(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/,
+      '$1-$2-$3T$4:$5:$6+09:00'
+    ));
+    const leadSourceTime = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth()+1).padStart(2,'0')}-${String(parsedDate.getDate()).padStart(2,'0')}T${String(parsedDate.getHours()).padStart(2,'0')}:${String(parsedDate.getMinutes()).padStart(2,'0')}:00`;
+    const leadSourceDate = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth()+1).padStart(2,'0')}-${String(parsedDate.getDate()).padStart(2,'0')}`;
     // 氏名を苗字と名前に分割
     const fullName  = items[4] ?? '';
     const nameParts = fullName.trim().split(/[\s　]+/);

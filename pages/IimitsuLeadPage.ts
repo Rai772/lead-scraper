@@ -83,11 +83,12 @@ export class IimitsuLeadPage {
 
     // 初回流入日時・日付を取得
     const rawDate = await getByLabel('取次日時');
-    const leadSourceTime = rawDate.trim().replace(
-      /(\d{4})\/(\d{2})\/(\d{2}) (\d{2}:\d{2})/,
-      '$1-$2-$3T$4:00'
-    );
-    const leadSourceDate = rawDate.trim().substring(0, 10).replace(/\//g, '-');
+    const parsedDate = new Date(rawDate.trim().replace(
+      /(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})/,
+      '$1-$2-$3T$4:$5:00+09:00'
+    ));
+    const leadSourceTime = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth()+1).padStart(2,'0')}-${String(parsedDate.getDate()).padStart(2,'0')}T${String(parsedDate.getHours()).padStart(2,'0')}:${String(parsedDate.getMinutes()).padStart(2,'0')}:00`;
+    const leadSourceDate = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth()+1).padStart(2,'0')}-${String(parsedDate.getDate()).padStart(2,'0')}`;
 
     // Description用のヒアリング内容
     const installationDestination = await getBySpanLabel('導入先');

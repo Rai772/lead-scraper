@@ -54,13 +54,19 @@ test('アスピック リードスクレイプ → SF登録', async ({ page }) =
   };
 
   // ⑤ 従業員規模の変換マップ
-  const employeeSizeMap: Record<string, string> = {
-    '1～10人':      '1\uFF5E10',
-    '11～50人':     '11\uFF5E49',
-    '51～100人':    '50\uFF5E99',
-    '101～500人':   '100\uFF5E299',
-    '501～1000人':  '500\uFF5E999',
-    '1001人以上':   '1000\uFF5E4999',
+  const resolveEmployeeSize = (raw: string): string => {
+    const matches = raw.match(/\d+/g);
+    if (!matches) return '';
+    const num = parseInt(matches[matches.length - 1]); 
+    if (isNaN(num)) return '';
+    if (num <= 10)   return '1\uFF5E10';
+    if (num <= 49)   return '11\uFF5E49';
+    if (num <= 99)   return '50\uFF5E99';
+    if (num <= 299)  return '100\uFF5E299';
+    if (num <= 499)  return '300\uFF5E499';
+    if (num <= 999)  return '500\uFF5E999';
+    if (num <= 4999) return '1000\uFF5E4999';
+    return '5000\uFF5E';
   };
 
   const sfLead = {
@@ -71,7 +77,7 @@ test('アスピック リードスクレイプ → SF登録', async ({ page }) =
     Email:               leadInfo.Email,
     State:               leadInfo.State,
     Street:              leadInfo.Street,
-    Employee_size__c:    employeeSizeMap[leadInfo.Employee_size__c] ?? '',
+    Employee_size__c: resolveEmployeeSize(leadInfo.Employee_size__c),
     title__c:            jobTitleMap[leadInfo.title__c] ?? 'その他',
     Department__c:       leadInfo.Department__c,
     web__c:              leadInfo.web__c,
