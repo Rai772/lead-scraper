@@ -29,14 +29,12 @@ export class MeetsmoreLeadPage {
 
   constructor(private page: Page) {}
 
-  // 一覧ページへ遷移する
   async gotoList() {
     await this.page.getByRole('menuitem', { name: '顧客管理' }).click();
     await this.page.waitForLoadState('domcontentloaded');
     console.log('📋 ミツモア リード一覧へ遷移');
   }
 
-  // 一番上のリードを開く
   async openLatestLead() {
     await this.page.locator('a').filter({ hasText: /有効/ }).first().click();
     await this.page.waitForLoadState('domcontentloaded');
@@ -44,10 +42,8 @@ export class MeetsmoreLeadPage {
     console.log('📄 詳細URL:', this.page.url());
   }
 
-  // リード情報を取得する
   async getLeadInfo(): Promise<MeetsmoreLeadInfo> {
 
-    // 単一値取得
     const getByLabel = async (label: string) => {
       try {
         const row = this.page.locator('tr').filter({
@@ -59,7 +55,6 @@ export class MeetsmoreLeadPage {
       }
     };
 
-    // チェックマークがついた値のみ取得
     const getCheckedValues = async (label: string) => {
       const row = this.page.locator('tr').filter({
         has: this.page.locator('td').filter({ hasText: new RegExp(`^${label}$`) })
@@ -74,43 +69,40 @@ export class MeetsmoreLeadPage {
       }
     };
 
-    // 氏名を取得して苗字と名前に分割
     const fullName  = await this.page.locator('[data-testid="customer-name"]').textContent() ?? '';
     const nameParts = fullName.trim().split(/[\s　]+/);
     const lastName  = nameParts[0] ?? fullName;
     const firstName = nameParts[1] ?? '';
 
-    // 住所を取得
     const fullAddress  = await this.page.locator('[data-testid="address"]').textContent() ?? '';
     const addressParts = fullAddress.trim().split(' ');
     const state  = addressParts[0] ?? '';
     const street = addressParts.slice(1).join(' ') ?? '';
 
-    // 依頼日時を取得してSF形式に変換
+    // 依頼日時を取得してJST対応でSF形式に変換
     const rawDate = await this.page.locator('[data-testid="request-date"]').textContent() ?? '';
     const cleanDate = rawDate.replace(/\s*\(.*\)/, '').trim();
-    const leadSourceTime = cleanDate.replace(
-      /(\d{4})\/(\d{2})\/(\d{2}) (\d{2}:\d{2})/,
-      '$1-$2-$3T$4:00'
-    );
-    const leadSourceDate = cleanDate.substring(0, 10).replace(/\//g, '-');
+    const parsedDate = new Date(cleanDate.replace(
+      /(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})/,
+      '$1-$2-$3T$4:$5:00+09:00'
+    ));
+    const leadSourceTime = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth()+1).padStart(2,'0')}-${String(parsedDate.getDate()).padStart(2,'0')}T${String(parsedDate.getHours()).padStart(2,'0')}:${String(parsedDate.getMinutes()).padStart(2,'0')}:00`;
+    const leadSourceDate = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth()+1).padStart(2,'0')}-${String(parsedDate.getDate()).padStart(2,'0')}`;
 
-    // 各項目を取得
-    let userCountRaw = '';
+    let userCountRaw   = '';
     let userCountLabel = '想定利用人数';
 
-      const count1 = await getByLabel('想定利用人数');
-      const count2 = await getByLabel('オペレーターの人数');
+    const count1 = await getByLabel('想定利用人数');
+    const count2 = await getByLabel('オペレーターの人数');
 
     if (count1) {
-        userCountRaw   = count1;
-        userCountLabel = '想定利用人数';
+      userCountRaw   = count1;
+      userCountLabel = '想定利用人数';
     } else if (count2) {
-        userCountRaw   = count2;
-        userCountLabel = 'オペレーターの人数';
+      userCountRaw   = count2;
+      userCountLabel = 'オペレーターの人数';
     }
 
-    // 各項目を取得
     const businessType  = await getCheckedValues('業務の種類');
     const otherServices = await getCheckedValues('導入検討サービス（CTIシステム以外）');
     const businessForm  = await getCheckedValues('事業形態');
