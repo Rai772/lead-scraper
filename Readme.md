@@ -58,8 +58,8 @@ MEETSMORE_PASSWORD=
 SF_CLIENT_ID=
 SF_CLIENT_SECRET=
 SF_INSTANCE_URL=https://widsley.my.salesforce.com
-SF_ADMIN_USER_ID=
-SLACK_WEBHOOK_URL=
+SF_ADMIN_USER_ID=         # Widsley AdminのSFユーザーID
+SLACK_WEBHOOK_URL=        # エラー通知用Slack Webhook URL
 GITHUB_PAT=
 ```
 
@@ -132,6 +132,29 @@ npx playwright test tests/import-meetsmore.spec.ts --project=chromium
 
 通知にはエラー種別・詳細・発生日時が含まれます。
 
+## SF登録仕様
+
+### セールス担当の自動セット
+新規リード登録時、セールス担当（`User__c`）に自動で Widsley Admin をセットします。
+Widsley Admin の SF ユーザーID を `.env` と GitHub Secrets の `SF_ADMIN_USER_ID` に設定してください。
+
+### 日付のタイムゾーン対応
+各媒体から取得する依頼日時はUTCで返されるため、JST（+9時間）に変換してSFに登録します。
+
+### 従業員規模の変換
+各媒体から取得した従業員規模を以下のSFの選択肢に変換して登録します。
+
+| 変換後の値 |
+|-----------|
+| 1～10 |
+| 11～49 |
+| 50～99 |
+| 100～299 |
+| 300～499 |
+| 500～999 |
+| 1000～4999 |
+| 5000～ |
+
 ## 各サービスのSFフィールドマッピング
 
 ### アイミツSaaS
@@ -154,7 +177,6 @@ npx playwright test tests/import-meetsmore.spec.ts --project=chromium
 | ヒアリング内容 | 説明 | Description |
 | 取次日時 | 初回流入日時 | LeadSourceTime__c |
 | 取次日 | 初回流入日 | LeadSourceDate__c |
-| （固定：管理者） | 担当ユーザー | User__c |
 
 ### アスピック
 | アスピック項目 | SFフィールド | API参照名 |
@@ -172,7 +194,6 @@ npx playwright test tests/import-meetsmore.spec.ts --project=chromium
 | DL区分 | 説明 | Description |
 | 日時 | 初回流入日時 | LeadSourceTime__c |
 | 日付 | 初回流入日 | LeadSourceDate__c |
-| （固定：管理者） | 担当ユーザー | User__c |
 
 ### ミツモア
 | ミツモア項目 | SFフィールド | API参照名 |
@@ -192,7 +213,6 @@ npx playwright test tests/import-meetsmore.spec.ts --project=chromium
 | 事業形態・業務種類・導入検討サービス | 説明 | Description |
 | 依頼日時 | 初回流入日時 | LeadSourceTime__c |
 | 依頼日 | 初回流入日 | LeadSourceDate__c |
-| （固定：管理者） | 担当ユーザー | User__c |
 
 ### 重複リード時の更新（全サービス共通）
 メールアドレスで既存リードが見つかった場合、新規登録は行わず既存リードの備考を更新します。
