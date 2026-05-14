@@ -82,12 +82,15 @@ export class MeetsmoreLeadPage {
     // 依頼日時を取得してJST対応でSF形式に変換
     const rawDate = await this.page.locator('[data-testid="request-date"]').textContent() ?? '';
     const cleanDate = rawDate.replace(/\s*\(.*\)/, '').trim();
+    // ミツモアはUTCで返すのでJSTに変換（+9時間）
     const parsedDate = new Date(cleanDate.replace(
       /(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})/,
-      '$1-$2-$3T$4:$5:00+09:00'
+      '$1-$2-$3T$4:$5:00Z'  // ← +09:00 → Z (UTC)に変更
     ));
-    const leadSourceTime = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth()+1).padStart(2,'0')}-${String(parsedDate.getDate()).padStart(2,'0')}T${String(parsedDate.getHours()).padStart(2,'0')}:${String(parsedDate.getMinutes()).padStart(2,'0')}:00`;
-    const leadSourceDate = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth()+1).padStart(2,'0')}-${String(parsedDate.getDate()).padStart(2,'0')}`;
+    const jstDate = new Date(parsedDate.getTime() + 9 * 60 * 60 * 1000); // +9時間
+    const leadSourceTime = `${jstDate.getFullYear()}-${String(jstDate.getMonth()+1).padStart(2,'0')}-${String(jstDate.getDate()).padStart(2,'0')}T${String(jstDate.getHours()).padStart(2,'0')}:${String(jstDate.getMinutes()).padStart(2,'0')}:00`;
+    const leadSourceDate = `${jstDate.getFullYear()}-${String(jstDate.getMonth()+1).padStart(2,'0')}-${String(jstDate.getDate()).padStart(2,'0')}`;
+
 
     let userCountRaw   = '';
     let userCountLabel = '想定利用人数';
