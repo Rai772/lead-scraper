@@ -31,7 +31,8 @@ export class IimitsuLeadPage {
   // 一覧ページへ遷移する
   async gotoList() {
     await this.page.goto('https://saas.imitsu.jp/mypage-partner/lead');
-    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForTimeout(3000);
     console.log('📋 アイミツ リード一覧へ遷移');
   }
 
