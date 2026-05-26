@@ -62,7 +62,7 @@ export async function findLeadByEmailOrPhone(
   if (phone) conditions.push(`Phone = '${escapeSoqlString(phone)}'`);
 
   const query = encodeURIComponent(
-    `SELECT Id FROM Lead WHERE ${conditions.join(' OR ')} LIMIT 1`
+    `SELECT Id FROM Lead WHERE (${conditions.join(' OR ')}) AND IsConverted = false LIMIT 1`
   );
 
   const res = await fetch(
@@ -118,7 +118,7 @@ export async function findLeadIdByEmail(token: string, email: string): Promise<s
   if (!email) return null;
 
   const query = encodeURIComponent(
-    `SELECT Id FROM Lead WHERE Email = '${escapeSoqlString(email)}' LIMIT 1`
+    `SELECT Id FROM Lead WHERE Email = '${escapeSoqlString(email)}' AND IsConverted = false LIMIT 1`
   );
   const res = await fetch(
     `${process.env.SF_INSTANCE_URL}/services/data/v59.0/query?q=${query}`,

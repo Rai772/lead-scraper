@@ -2,7 +2,7 @@ import { test } from '@playwright/test';
 import * as dotenv from 'dotenv';
 import { AspicLoginPage } from '../pages/AspicLoginPage';
 import { AspicLeadPage } from '../pages/AspicLeadPage';
-import { getSalesforceToken, createSFLead, findLeadByIntegrationId, findLeadIdByEmail, getExistingRemarks, buildRemarksText, updateSFLead } from '../salesforce';
+import { getSalesforceToken, createSFLead, findLeadByIntegrationId } from '../salesforce';
 import { notifySlackError } from '../slack';
 
 dotenv.config();
@@ -107,22 +107,7 @@ test('アスピック リードスクレイプ → SF登録', async ({ page }) =
     return;
   }
 
-  // ⑧ メールアドレスで既存リード検索 → 備考追記して終了
-  const existingLeadId = await findLeadIdByEmail(token, sfLead.Email);
-  if (existingLeadId) {
-    try {
-      const existingRemarks = await getExistingRemarks(token, existingLeadId);
-      const remarks = buildRemarksText('アスピック', leadInfo, existingRemarks);
-      await updateSFLead(token, existingLeadId, { Remarks__c: remarks });
-      console.log('🔄 既存リード備考更新（メール重複）: SF ID:', existingLeadId);
-    } catch (e: any) {
-      await notifySlackError('アスピック', 'SF備考更新失敗', `SF ID:${existingLeadId}\n${e.message}`);
-      throw e;
-    }
-    return;
-  }
-
-  // ⑨ SF登録
+  // ⑧ SF登録
   try {
     const result = await createSFLead(token, {
       ...sfLead,
