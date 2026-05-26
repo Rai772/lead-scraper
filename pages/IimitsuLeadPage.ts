@@ -37,8 +37,10 @@ export class IimitsuLeadPage {
 
   // 一番上のリードを開く
   async openLatestLead() {
-    await this.page.locator('a[href^="/mypage-partner/lead/"]').first().click();
+    // テーブル内の会社名リンク（/mypage-partner/lead/XXX 形式）をクリック
+    await this.page.locator('tbody a[href^="/mypage-partner/lead/"]').first().click();
     await this.page.waitForLoadState('domcontentloaded');
+    await this.page.waitForTimeout(2000);
     console.log('📄 詳細URL:', this.page.url());
   }
 
