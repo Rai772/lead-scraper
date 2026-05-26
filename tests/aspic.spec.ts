@@ -80,7 +80,7 @@ test('アスピック リードスクレイプ → SF登録', async ({ page }) =
     Employee_size__c:    resolveEmployeeSize(leadInfo.Employee_size__c),
     title__c:            jobTitleMap[leadInfo.title__c] ?? 'その他',
     Department__c:       leadInfo.Department__c,
-    web__c:              leadInfo.web__c,
+    ComparisonSiteContent__c: leadInfo.web__c,
     integration_ID__c:   leadInfo.integration_ID__c,
     first_touchpoint__c: leadInfo.first_touchpoint__c,
     LeadSource:          leadInfo.LeadSource,

@@ -75,7 +75,7 @@ test('アイミツ リードスクレイプ → SF登録', async ({ page }) => {
     })(),
     title__c:            jobTitleMap[leadInfo.title__c] ?? 'その他',
     Department__c:       leadInfo.Department__c,
-    web__c:              leadInfo.web__c,
+    ComparisonSiteContent__c: leadInfo.web__c,
     InstallationTime__c: leadInfo.InstallationTime__c,
     Industry:            leadInfo.Industry,
     Field8__c:           parseInt(leadInfo.Field8__c) || 0,
