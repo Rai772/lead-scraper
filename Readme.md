@@ -58,6 +58,7 @@ MEETSMORE_PASSWORD=
 SF_CLIENT_ID=
 SF_CLIENT_SECRET=
 SF_INSTANCE_URL=https://widsley.my.salesforce.com
+SF_ADMIN_USER_ID=
 SLACK_WEBHOOK_URL=
 GITHUB_PAT=
 ```
@@ -75,6 +76,7 @@ MEETSMORE_PASSWORD
 SF_CLIENT_ID
 SF_CLIENT_SECRET
 SF_INSTANCE_URL
+SF_ADMIN_USER_ID
 SLACK_WEBHOOK_URL
 ```
 
@@ -135,7 +137,7 @@ npx playwright test tests/import-meetsmore.spec.ts --project=chromium
 ### アイミツSaaS
 | アイミツ項目 | SFフィールド | API参照名 |
 |-------------|-------------|-----------|
-| リードID | インテグレーションID | integration_ID__c |
+| リードID（URL末尾） | インテグレーションID | integration_ID__c |
 | 担当者 | 姓・名 | LastName / FirstName |
 | 会社 | 会社名 | Company |
 | 電話番号 | 会社電話 | Phone |
@@ -145,13 +147,17 @@ npx playwright test tests/import-meetsmore.spec.ts --project=chromium
 | 従業員規模 | 従業員規模 | Employee_size__c |
 | 役職 | 役職 | title__c |
 | 部署 | 部署名 | Department__c |
-| カスタマーの現状 | web問い合わせ内容 | web__c |
+| カスタマーの現状 | 比較サイト問い合わせ内容 | ComparisonSiteContent__c |
 | 導入予定時期 | 導入時期 | InstallationTime__c |
 | 業界 | 業種 | Industry |
 | サービス利用人数 | 想定利用人数 | Field8__c |
 | ヒアリング内容 | 説明 | Description |
 | 取次日時 | 初回流入日時 | LeadSourceTime__c |
 | 取次日 | 初回流入日 | LeadSourceDate__c |
+| （固定: アイミツSaaS） | 初回タッチポイント | first_touchpoint__c |
+| （固定: アイミツSaaS） | リードソース | LeadSource |
+| （固定: Comdesk Lead） | 製品 | product__c |
+| （SF_ADMIN_USER_ID） | 担当者 | User__c |
 
 ### アスピック
 | アスピック項目 | SFフィールド | API参照名 |
@@ -164,11 +170,15 @@ npx playwright test tests/import-meetsmore.spec.ts --project=chromium
 | 従業員数 | 従業員規模 | Employee_size__c |
 | 役職名 | 役職 | title__c |
 | 部署名 | 部署名 | Department__c |
-| 備考 | web問い合わせ内容 | web__c |
+| 備考 | 比較サイト問い合わせ内容 | ComparisonSiteContent__c |
 | 導入時期 | 導入時期 | InstallationTime__c |
-| DL区分 | 説明 | Description |
+| DL区分 | 説明（`【DL区分】` プレフィックス付き） | Description |
 | 日時 | 初回流入日時 | LeadSourceTime__c |
 | 日付 | 初回流入日 | LeadSourceDate__c |
+| （固定: アスピック） | 初回タッチポイント | first_touchpoint__c |
+| （固定: アスピック） | リードソース | LeadSource |
+| （固定: Comdesk Lead） | 製品 | product__c |
+| （SF_ADMIN_USER_ID） | 担当者 | User__c |
 
 ### ミツモア
 | ミツモア項目 | SFフィールド | API参照名 |
@@ -188,28 +198,16 @@ npx playwright test tests/import-meetsmore.spec.ts --project=chromium
 | 事業形態・業務種類・導入検討サービス | 説明 | Description |
 | 依頼日時 | 初回流入日時 | LeadSourceTime__c |
 | 依頼日 | 初回流入日 | LeadSourceDate__c |
+| （固定: ミツモア） | 初回タッチポイント | first_touchpoint__c |
+| （固定: ミツモア） | リードソース | LeadSource |
+| （固定: Comdesk Lead） | 製品 | product__c |
+| （SF_ADMIN_USER_ID） | 担当者 | User__c |
 
-### 重複リード時の更新（全サービス共通）
-メールアドレスで既存リードが見つかった場合、新規登録は行わず既存リードの備考に追記します。
+### 重複チェック（全サービス共通）
 
-| 更新フィールド | 内容 | API参照名 |
-|--------------|------|-----------|
-| 備考 | 下記フォーマットで追記（既存の備考は上書きしない） | Remarks__c |
+`integration_ID__c`（各サービスのリードID / No. / 依頼ID）でSF既存リードを検索します。
 
-追記フォーマット：
-
-```
-【〇〇より再問い合わせあり】
-日付：YYYY/M/D
-氏名：姓 名
-会社名：〇〇株式会社
-電話番号：0X0-XXXX-XXXX
-従業員規模：〇〇〜〇〇
-WEB問い合わせ：〇〇〇〇
-説明：〇〇〇〇
-備考：〇〇〇〇
-```
-
-- 〇〇 は流入元媒体名（アスピック / アイミツSaaS / ミツモア / ホームページ）
-- 値が空のフィールドは出力しない
-- 複数回の再問い合わせは空行区切りで追記
+| 状態 | 処理 |
+|------|------|
+| 登録済み（integration_ID__c 一致） | 新規登録せずスキップ |
+| 未登録 | SF新規リードとして登録 |
