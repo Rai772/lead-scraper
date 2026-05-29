@@ -1,13 +1,18 @@
 name: Lead Scraper
-
 on:
   workflow_dispatch:
     inputs:
       service:
-        description: '実行するサービス (all / aspic / iimit / meetsmore)'
+        description: '実行するサービス (all / aspic / iimitsu / meetsmore)'
         required: true
         default: 'all'
-  
+        type: choice
+        options:
+          - all
+          - aspic
+          - iimitsu
+          - meetsmore
+
 jobs:
   scrape:
     timeout-minutes: 30
@@ -34,11 +39,10 @@ jobs:
 
       - name: Install Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: Install Playwright system deps
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
+        run: sudo npx playwright install-deps chromium
 
       - name: Run Scraper
         env:
