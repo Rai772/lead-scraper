@@ -84,17 +84,12 @@ SLACK_WEBHOOK_URL
 
 ```bash
 # 全サービス一括実行
-npx playwright test --project=chromium
+npx playwright test tests/aspic.spec.ts tests/iimitsu.spec.ts tests/meetsmore.spec.ts --project=chromium
 
 # 個別実行
 npx playwright test tests/aspic.spec.ts --headed --project=chromium
 npx playwright test tests/iimitsu.spec.ts --headed --project=chromium
 npx playwright test tests/meetsmore.spec.ts --headed --project=chromium
-
-# 過去データ一括インポート
-npx playwright test tests/import-aspic.spec.ts --project=chromium
-npx playwright test tests/import-iimitsu.spec.ts --project=chromium
-npx playwright test tests/import-meetsmore.spec.ts --project=chromium
 ```
 
 ## GitHub Actions
@@ -107,6 +102,8 @@ npx playwright test tests/import-meetsmore.spec.ts --project=chromium
 | aspic | アスピックのみ実行 |
 | iimitsu | アイミツSaaSのみ実行 |
 | meetsmore | ミツモアのみ実行 |
+
+Playwrightのブラウザバイナリは `actions/cache` でキャッシュされます。キャッシュヒット時はブラウザのインストールをスキップし、システム依存パッケージのみインストールします。
 
 ## Google Apps Script
 
