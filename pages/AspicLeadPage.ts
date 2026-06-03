@@ -49,6 +49,12 @@ export class AspicLeadPage {
     console.log('📋 アスピック リード一覧へ遷移');
   }
 
+    // リードが0件かどうかチェック
+    async hasLeads(): Promise<boolean> {
+          const count = await this.page.locator('.atom_fnc_company_name').count();
+          return count > 0;
+    }
+  
   // 一番上のリードを開く
   async openLatestLead() {
     await this.page.locator('.atom_fnc_company_name').first().click();
