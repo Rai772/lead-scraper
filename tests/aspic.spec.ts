@@ -26,12 +26,25 @@ test('アスピック リードスクレイプ → SF登録', async ({ page }) =
   const leadPage = new AspicLeadPage(page);
   try {
     await leadPage.gotoList();
-    await leadPage.openLatestLead();
   } catch (e: any) {
-    await notifySlackError('アスピック', 'スクレイピング失敗', e.message);
-    throw e;
+        await notifySlackError('アスピック', 'スクレイピング失敗', e.message);
+        throw e;
   }
 
+    // ③ リードが0件ならスキップ
+    const hasLeads = await leadPage.hasLeads();
+    if (!hasLeads) {
+          console.log('⏭️ アスピック: リードが0件のためスキップ');
+          return;
+    }
+
+    // ④ 一番上のリードを開く
+    try {
+          await leadPage.openLatestLead();
+    } catch (e: any) {
+          await notifySlackError('アスピック', 'スクレイピング失敗', e.message);
+          throw e;
+    }
   // ③ リード情報を取得
   let leadInfo: any;
   try {
