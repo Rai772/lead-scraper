@@ -14,7 +14,7 @@ export type AspicLeadInfo = {
   web__c: string;
   integration_ID__c: string;
   first_touchpoint__c: string;
-  LeadSource: string;
+  LeadSource: string;h
   product__c: string;
   InstallationTime__c: string;
   Remarks__c: string;
@@ -29,7 +29,7 @@ export class AspicLeadPage {
   // 最新一覧へ遷移
   async gotoList() {
     await this.page.goto('https://asulead.cloud/asu/lead');
-    await this.page.waitForLoadState('domcontentloaded');
+        await this.page.waitForLoadState('networkidle');
 
     // 今月の期間を設定
     const now       = new Date();
@@ -44,14 +44,19 @@ export class AspicLeadPage {
 
     // 対象サービスを「すべて」に設定
     await this.page.locator('#formulate--asu-lead-4').selectOption('0');
-    await this.page.waitForLoadState('domcontentloaded');
+        await this.page.waitForLoadState('networkidle');
 
     console.log('📋 アスピック リード一覧へ遷移');
   }
 
     // リードが0件かどうかチェック
     async hasLeads(): Promise<boolean> {
-          const count = await this.page.locator('.atom_fnc_company_name').count();
+    try {
+            await this.page.locator('.atom_fnc_company_name').first().waitFor({ timeout: 5000 });
+    } catch {
+            return false;
+    }
+    const count = await this.page.locator('.atom_fnc_company_name').count();
           return count > 0;
     }
   
