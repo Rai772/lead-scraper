@@ -14,7 +14,7 @@ export type AspicLeadInfo = {
   web__c: string;
   integration_ID__c: string;
   first_touchpoint__c: string;
-  LeadSource: string;h
+  LeadSource: string;
   product__c: string;
   InstallationTime__c: string;
   Remarks__c: string;
