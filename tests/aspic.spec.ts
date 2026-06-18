@@ -18,7 +18,7 @@ test('アスピック リードスクレイプ → SF登録', async ({ page }) =
   try {
     await loginPage.login(email, password);
   } catch (e: any) {
-    await notifySlackError('アスピック', 'ログイン失敗', e.message);
+    await notifySlackError('アスピック', 'ログイン失敗', 'アスピックへのログインに失敗しました。パスワードや設定を確認してください。', e.message);
     throw e;
   }
 
@@ -27,7 +27,7 @@ test('アスピック リードスクレイプ → SF登録', async ({ page }) =
   try {
     await leadPage.gotoList();
   } catch (e: any) {
-        await notifySlackError('アスピック', 'スクレイピング失敗', e.message);
+        await notifySlackError('アスピック', 'リード一覧取得失敗', 'アスピックのリード一覧を開けませんでした。サイトの画面が変わった可能性があります。', e.message);
         throw e;
   }
 
@@ -42,7 +42,7 @@ test('アスピック リードスクレイプ → SF登録', async ({ page }) =
     try {
           await leadPage.openLatestLead();
     } catch (e: any) {
-          await notifySlackError('アスピック', 'スクレイピング失敗', e.message);
+          await notifySlackError('アスピック', 'リード詳細取得失敗', 'アスピックのリード詳細ページを開けませんでした。サイトの画面が変わった可能性があります。', e.message);
           throw e;
     }
   // ③ リード情報を取得
@@ -50,7 +50,7 @@ test('アスピック リードスクレイプ → SF登録', async ({ page }) =
   try {
     leadInfo = await leadPage.getLeadInfo();
   } catch (e: any) {
-    await notifySlackError('アスピック', 'リード情報取得失敗', e.message);
+    await notifySlackError('アスピック', 'リード情報取得失敗', 'アスピックのリード詳細情報を取得できませんでした。アスピックの画面が変わった可能性があります。', e.message);
     throw e;
   }
 
@@ -109,7 +109,7 @@ test('アスピック リードスクレイプ → SF登録', async ({ page }) =
   try {
     token = await getSalesforceToken();
   } catch (e: any) {
-    await notifySlackError('アスピック', 'SF認証失敗', e.message);
+    await notifySlackError('アスピック', 'Salesforce接続失敗', 'Salesforceへの接続に失敗しました。システム管理者にお問い合わせください。', e.message);
     throw e;
   }
 
@@ -128,7 +128,7 @@ test('アスピック リードスクレイプ → SF登録', async ({ page }) =
     });
     console.log('🎉 登録完了！SF ID:', result.id);
   } catch (e: any) {
-    await notifySlackError('アスピック', 'SF登録失敗', `No.${sfLead.integration_ID__c}\n${e.message}`);
+    await notifySlackError('アスピック', 'Salesforce登録失敗', `No.${sfLead.integration_ID__c} のリードをSalesforceに登録できませんでした。手動での登録をお願いします。`, e.message);
     throw e;
   }
 });

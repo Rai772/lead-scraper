@@ -18,7 +18,7 @@ test('アイミツ リードスクレイプ → SF登録', async ({ page }) => {
   try {
     await loginPage.login(email, password);
   } catch (e: any) {
-    await notifySlackError('アイミツ', 'ログイン失敗', e.message);
+    await notifySlackError('アイミツ', 'ログイン失敗', 'アイミツへのログインに失敗しました。パスワードや設定を確認してください。', e.message);
     throw e;
   }
 
@@ -28,7 +28,7 @@ test('アイミツ リードスクレイプ → SF登録', async ({ page }) => {
     await leadPage.gotoList();
     await leadPage.openLatestLead();
   } catch (e: any) {
-    await notifySlackError('アイミツ', 'スクレイピング失敗', e.message);
+    await notifySlackError('アイミツ', 'リード一覧取得失敗', 'アイミツのリード一覧を開けませんでした。サイトの画面が変わった可能性があります。', e.message);
     throw e;
   }
 
@@ -37,7 +37,7 @@ test('アイミツ リードスクレイプ → SF登録', async ({ page }) => {
   try {
     leadInfo = await leadPage.getLeadInfo();
   } catch (e: any) {
-    await notifySlackError('アイミツ', 'リード情報取得失敗', e.message);
+    await notifySlackError('アイミツ', 'リード情報取得失敗', 'アイミツのリード詳細情報を取得できませんでした。アイミツの画面が変わった可能性があります。', e.message);
     throw e;
   }
 
@@ -93,7 +93,7 @@ test('アイミツ リードスクレイプ → SF登録', async ({ page }) => {
   try {
     token = await getSalesforceToken();
   } catch (e: any) {
-    await notifySlackError('アイミツ', 'SF認証失敗', e.message);
+    await notifySlackError('アイミツ', 'Salesforce接続失敗', 'Salesforceへの接続に失敗しました。システム管理者にお問い合わせください。', e.message);
     throw e;
   }
 
@@ -112,7 +112,7 @@ test('アイミツ リードスクレイプ → SF登録', async ({ page }) => {
     });
     console.log('🎉 登録完了！SF ID:', result.id);
   } catch (e: any) {
-    await notifySlackError('アイミツ', 'SF登録失敗', `リードID:${sfLead.integration_ID__c}\n${e.message}`);
+    await notifySlackError('アイミツ', 'Salesforce登録失敗', `リードID ${sfLead.integration_ID__c} のリードをSalesforceに登録できませんでした。手動での登録をお願いします。`, e.message);
     throw e;
   }
 });

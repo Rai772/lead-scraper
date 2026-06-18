@@ -1,11 +1,19 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-export async function notifySlackError(service: string, errorType: string, detail: string): Promise<void> {
+export async function notifySlackError(service: string, errorType: string, detail: string, technicalDetail?: string): Promise<void> {
   const webhookUrl = process.env.SLACK_WEBHOOK_URL;
   if (!webhookUrl) {
     console.error('SLACK_WEBHOOK_URL が設定されていません');
     return;
+  }
+
+  const fields: { title: string; value: string; short: boolean }[] = [
+    { title: 'エラー種別', value: errorType,    short: true },
+    { title: '内容',       value: detail,        short: false },
+  ];
+  if (technicalDetail) {
+    fields.push({ title: '技術詳細（エンジニア向け）', value: technicalDetail, short: false });
   }
 
   const message = {
@@ -13,10 +21,7 @@ export async function notifySlackError(service: string, errorType: string, detai
     attachments: [
       {
         color: 'danger',
-        fields: [
-          { title: 'エラー種別', value: errorType, short: true },
-          { title: '詳細',       value: detail,    short: false },
-        ],
+        fields,
         footer: new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }),
       },
     ],

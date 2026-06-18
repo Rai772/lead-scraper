@@ -18,7 +18,7 @@ test('ミツモア リードスクレイプ → SF登録', async ({ page }) => {
          try {
                     await loginPage.login(email, password);
          } catch (e: any) {
-    await notifySlackError('ミツモア', 'ログイン失敗', e.message);
+    await notifySlackError('ミツモア', 'ログイン失敗', 'ミツモアへのログインに失敗しました。パスワードや設定を確認してください。', e.message);
                     throw e;
          }
 
@@ -28,7 +28,7 @@ test('ミツモア リードスクレイプ → SF登録', async ({ page }) => {
                     await leadPage.gotoList();
                     await leadPage.openLatestLead();
          } catch (e: any) {
-    await notifySlackError('ミツモア', 'スクレイピング失敗', e.message);
+    await notifySlackError('ミツモア', 'リード一覧取得失敗', 'ミツモアのリード一覧を開けませんでした。サイトの画面が変わった可能性があります。', e.message);
                     throw e;
          }
 
@@ -37,7 +37,7 @@ test('ミツモア リードスクレイプ → SF登録', async ({ page }) => {
          try {
                     leadInfo = await leadPage.getLeadInfo();
          } catch (e: any) {
-    await notifySlackError('ミツモア', 'リード情報取得失敗', e.message);
+    await notifySlackError('ミツモア', 'リード情報取得失敗', 'ミツモアのリード詳細情報を取得できませんでした。ミツモアの画面が変わった可能性があります。', e.message);
                     throw e;
          }
 
@@ -109,8 +109,8 @@ test('ミツモア リードスクレイプ → SF登録', async ({ page }) => {
                   InstallationTime__c: leadInfo.InstallationTime__c,
                   Description:         leadInfo.Remarks__c,
                   Field8__c:           leadInfo.Field8__c,
-                  LeadSourceTime__c:   leadInfo.LeadSourceTime__c,
-                  LeadSourceDate__c:   leadInfo.LeadSourceDate__c,
+                  LeadSourceTime__c:   leadInfo.LeadSourceTime__c || null,
+                  LeadSourceDate__c:   leadInfo.LeadSourceDate__c || null,
                   MainIndustry__c:     industryMap[leadInfo.MainIndustry__c] ?? 'その他',
        };
 
@@ -119,7 +119,7 @@ test('ミツモア リードスクレイプ → SF登録', async ({ page }) => {
          try {
                     token = await getSalesforceToken();
          } catch (e: any) {
-    await notifySlackError('ミツモア', 'SF認証失敗', e.message);
+    await notifySlackError('ミツモア', 'Salesforce接続失敗', 'Salesforceへの接続に失敗しました。システム管理者にお問い合わせください。', e.message);
                     throw e;
          }
 
@@ -138,7 +138,7 @@ test('ミツモア リードスクレイプ → SF登録', async ({ page }) => {
                   });
                   console.log('🎉 登録完了！SF ID:', result.id);
        } catch (e: any) {
-    await notifySlackError('ミツモア', 'SF登録失敗', `依頼ID:${sfLead.integration_ID__c}\n${e.message}`);
+    await notifySlackError('ミツモア', 'Salesforce登録失敗', `依頼ID ${sfLead.integration_ID__c} のリードをSalesforceに登録できませんでした。手動での登録をお願いします。`, e.message);
                   throw e;
        }
 });

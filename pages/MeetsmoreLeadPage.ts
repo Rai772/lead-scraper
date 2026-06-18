@@ -82,7 +82,7 @@ export class MeetsmoreLeadPage {
       // 依頼日時を取得してJST対応でSF形式に変換
       let rawDate = '';
         try {
-                rawDate = await this.page.locator('[data-testid="request-date"]').textContent({ timeout: 5000 }) ?? '';
+                rawDate = await this.page.locator('[data-testid="lead-date"]').textContent({ timeout: 5000 }) ?? '';
         } catch {
                 rawDate = '';
         }
@@ -95,11 +95,9 @@ export class MeetsmoreLeadPage {
         let leadSourceTime = '';
         let leadSourceDate = '';
         if (match) {
-                // ミツモアの日付はUTC表示なのでJSTに変換（+9時間）
-          const parsedDate = new Date(`${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:00Z`);
-                const jstDate = new Date(parsedDate.getTime() + 9 * 60 * 60 * 1000);
-                leadSourceTime = `${jstDate.getFullYear()}-${String(jstDate.getMonth()+1).padStart(2,'0')}-${String(jstDate.getDate()).padStart(2,'0')}T${String(jstDate.getHours()).padStart(2,'0')}:${String(jstDate.getMinutes()).padStart(2,'0')}:00`;
-                leadSourceDate = `${jstDate.getFullYear()}-${String(jstDate.getMonth()+1).padStart(2,'0')}-${String(jstDate.getDate()).padStart(2,'0')}`;
+                // ページはJST表示なのでそのまま使用
+                leadSourceTime = `${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:00`;
+                leadSourceDate = `${match[1]}-${match[2]}-${match[3]}`;
         } else {
                 console.log('⚠️ 日付パース失敗 cleanDate:', cleanDate);
         }
