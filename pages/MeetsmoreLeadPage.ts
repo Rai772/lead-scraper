@@ -36,7 +36,7 @@ export class MeetsmoreLeadPage {
   }
 
   async openLatestLead() {
-        await this.page.locator('a').filter({ hasText: /有効/ }).nth(1).click();
+        await this.page.locator('a').filter({ hasText: /有効/ }).first().click();
         await this.page.waitForLoadState('domcontentloaded');
         await this.page.waitForTimeout(5000);
         console.log('📄 詳細URL:', this.page.url());
