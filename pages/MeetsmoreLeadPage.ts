@@ -80,7 +80,12 @@ export class MeetsmoreLeadPage {
     const street = addressParts.slice(1).join(' ') ?? '';
 
     // 依頼日時を取得してJST対応でSF形式に変換
-    const rawDate = await this.page.locator('[data-testid="request-date"]').textContent() ?? '';
+    let rawDate = '';
+    try {
+      rawDate = await this.page.locator('[data-testid="request-date"]').textContent({ timeout: 5000 }) ?? '';
+    } catch {
+      rawDate = '';
+    }
     const cleanDate = rawDate.replace(/\s*\(.*\)/, '').trim();
     // ミツモアはUTCで返すのでJSTに変換（+9時間）
     const parsedDate = new Date(cleanDate.replace(
