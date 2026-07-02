@@ -36,6 +36,11 @@ test('アイミツ リードスクレイプ → SF登録', async ({ page }) => {
   let leadInfo: any;
   try {
     leadInfo = await leadPage.getLeadInfo();
+
+    // 主要項目が全て空ならスクレイプ失敗とみなす（空データのSF登録を防止）
+    if (!leadInfo.Company && !leadInfo.Email && !leadInfo.Phone) {
+      throw new Error('リード詳細は開けましたが、データが取得できませんでした（全項目が空）。アイミツの画面構造が変わった可能性があります。');
+    }
   } catch (e: any) {
     await notifySlackError('アイミツ', 'リード情報取得失敗', 'アイミツのリード詳細情報を取得できませんでした。アイミツの画面が変わった可能性があります。', e.message);
     throw e;
@@ -87,6 +92,10 @@ test('アイミツ リードスクレイプ → SF登録', async ({ page }) => {
     LeadSourceTime__c:   leadInfo.LeadSourceTime__c,
     LeadSourceDate__c:   leadInfo.LeadSourceDate__c,
   };
+
+  // 空の日付フィールドはSFに送らない（JSONパーサーエラー防止）
+  if (!sfLead.LeadSourceTime__c) delete (sfLead as any).LeadSourceTime__c;
+  if (!sfLead.LeadSourceDate__c) delete (sfLead as any).LeadSourceDate__c;
 
   // ⑤ SF認証
   let token: string;

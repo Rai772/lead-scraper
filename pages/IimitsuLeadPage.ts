@@ -47,25 +47,26 @@ export class IimitsuLeadPage {
 
   // リード情報を取得する
   async getLeadInfo(): Promise<IimitsuLeadInfo> {
-
-    // spanラベルで値を取得するヘルパー関数
+    // ラベルのテキストから値を取得するヘルパー関数
+    // ※MUIの自動生成クラス名(mui-xxxxx)はサイト再ビルドで変わるため使わない
     const getByLabel = async (label: string) => {
       try {
-        const labelEl = this.page.locator('p.mui-18g3h65', { hasText: label }).first();
-        const parent  = labelEl.locator('xpath=..');
-        const valueEl = parent.locator('p.mui-11o2v0y').first();
+        // ラベルと完全一致するpを探す（部分一致だと「会社」が「株式会社〇〇」にもマッチするため）
+        const labelEl = this.page.locator(`p:text-is("${label}")`).first();
+        // ラベルの直後にあるpを値として取得
+        const valueEl = labelEl.locator('xpath=following-sibling::div[1]//p').first();
         return (await valueEl.textContent({ timeout: 2000 }) ?? '').trim();
       } catch {
         return '';
       }
     };
 
-    // spanラベルで値を取得するヘルパー関数（ヒアリング内容用）
+    // spanラベルから値を取得するヘルパー関数（ヒアリング内容用）
     const getBySpanLabel = async (label: string) => {
       try {
-        const labelEl = this.page.locator('span.mui-1nf44rn', { hasText: label }).first();
-        const parent  = labelEl.locator('xpath=..');
-        const valueEl = parent.locator('p').first();
+        const labelEl = this.page.locator('span', { hasText: new RegExp(`^${label}$`) }).first();
+        // spanの親をたどって、その中のpを取得
+        const valueEl = labelEl.locator('xpath=..').locator('p').first();
         return (await valueEl.textContent({ timeout: 2000 }) ?? '').trim();
       } catch {
         return '';
@@ -84,14 +85,18 @@ export class IimitsuLeadPage {
     const prefecture = await getByLabel('所在地（都道府県）');
     const city       = await getByLabel('所在地（市区町村）');
 
-    // 初回流入日時・日付を取得
+    // 初回流入日時・日付を取得（取得失敗時は空にしてSFエラーを防ぐ）
     const rawDate = await getByLabel('取次日時');
+    let leadSourceTime = '';
+    let leadSourceDate = '';
     const parsedDate = new Date(rawDate.trim().replace(
       /(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})/,
       '$1-$2-$3T$4:$5:00+09:00'
     ));
-    const leadSourceTime = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth()+1).padStart(2,'0')}-${String(parsedDate.getDate()).padStart(2,'0')}T${String(parsedDate.getHours()).padStart(2,'0')}:${String(parsedDate.getMinutes()).padStart(2,'0')}:00`;
-    const leadSourceDate = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth()+1).padStart(2,'0')}-${String(parsedDate.getDate()).padStart(2,'0')}`;
+    if (rawDate && !isNaN(parsedDate.getTime())) {
+      leadSourceTime = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth()+1).padStart(2,'0')}-${String(parsedDate.getDate()).padStart(2,'0')}T${String(parsedDate.getHours()).padStart(2,'0')}:${String(parsedDate.getMinutes()).padStart(2,'0')}:00`;
+      leadSourceDate = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth()+1).padStart(2,'0')}-${String(parsedDate.getDate()).padStart(2,'0')}`;
+    }
 
     // Description用のヒアリング内容
     const installationDestination = await getBySpanLabel('導入先');
