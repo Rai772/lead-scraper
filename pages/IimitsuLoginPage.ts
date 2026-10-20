@@ -15,11 +15,12 @@ export class IimitsuLoginPage {
     await this.page.getByRole('link', { name: 'ログイン画面へ' }).click();
 
     // メールアドレスを入力
-    await this.page.getByRole('textbox', { name: 'メールアドレス' }).fill(email);
+    // ※Auth0画面はブラウザの言語設定で日本語/英語が切り替わる（CIでは英語になる）ため両対応
+    await this.page.getByRole('textbox', { name: /メールアドレス|Email address/ }).fill(email);
 
     // パスワードを入力
-    await this.page.getByRole('textbox', { name: 'パスワード' }).fill(password);
-    await this.page.getByRole('button', { name: '続ける' }).click();
+    await this.page.getByRole('textbox', { name: /パスワード|^Password$/ }).fill(password);
+    await this.page.getByRole('button', { name: /^(続ける|Continue)$/ }).click();
 
     // ログイン完了を待つ
     await this.page.waitForURL('**/mypage-partner**', { timeout: 30000 });
