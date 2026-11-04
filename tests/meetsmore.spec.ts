@@ -24,12 +24,19 @@ test('ミツモア リードスクレイプ → SF登録', async ({ page }) => {
 
        // ② リード一覧へ遷移して一番上のリードを開く
        const leadPage = new MeetsmoreLeadPage(page);
+         let hasLead = false;
          try {
                     await leadPage.gotoList();
-                    await leadPage.openLatestLead();
+                    hasLead = await leadPage.openLatestLead();
          } catch (e: any) {
     await notifySlackError('ミツモア', 'リード一覧取得失敗', 'ミツモアのリード一覧を開けませんでした。サイトの画面が変わった可能性があります。', e.message);
                     throw e;
+         }
+
+         // 有効なリードが0件なら正常終了（エラー通知しない）
+         if (!hasLead) {
+           console.log('ℹ️ ミツモア: 新規の有効リードがないため終了します');
+           return;
          }
 
        // ③ リード情報を取得
