@@ -35,11 +35,25 @@ export class MeetsmoreLeadPage {
         console.log('📋 ミツモア リード一覧へ遷移');
   }
 
-  async openLatestLead() {
-        await this.page.locator('a').filter({ hasText: /有効/ }).first().click();
-        await this.page.waitForLoadState('domcontentloaded');
-        await this.page.waitForTimeout(5000);
-        console.log('📄 詳細URL:', this.page.url());
+  /**
+   * 一覧の一番上の「有効」リードを開く。
+   * 有効なリードが0件の場合は false を返す（エラーにしない）。
+   */
+  async openLatestLead(): Promise<boolean> {
+    const link = this.page.locator('a').filter({ hasText: /有効/ }).first();
+
+    try {
+      await link.waitFor({ state: 'visible', timeout: 10000 });
+    } catch {
+      console.log('ℹ️ ミツモア: 有効なリードなし（0件）→ スキップ');
+      return false;
+    }
+
+    await link.click();
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.waitForTimeout(5000);
+    console.log('📄 詳細URL:', this.page.url());
+    return true;
   }
 
   async getLeadInfo(): Promise<MeetsmoreLeadInfo> {
